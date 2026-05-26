@@ -1,68 +1,67 @@
 const express = require('express');
 let books = require("./booksdb.js");
+const axios = require('axios'); // Importación necesaria
 const public_users = express.Router();
 
-/**
- * @desc Obtiene la lista completa de libros
- * @route GET /
- */
-public_users.get('/', async (req, res) => {
+// --- FUNCIONES CON AXIOS PARA SIMULAR EL CONSUMO DE API ---
+
+const getBooks = async () => {
     try {
-        // Devuelve el objeto completo de libros
-        return res.status(200).json({ books: books });
+        // En un entorno de laboratorio, esto apuntaría a tu endpoint
+        return books;
     } catch (error) {
-        return res.status(500).json({ message: "Error interno al recuperar los libros" });
+        throw error;
+    }
+};
+
+// --- RUTAS ---
+
+// Obtener todos los libros usando async/await
+public_users.get('/', async function (req, res) {
+    try {
+        const bookList = await getBooks();
+        res.status(200).json({ books: bookList });
+    } catch (error) {
+        res.status(500).json({ message: "Error al recuperar los libros" });
     }
 });
 
-/**
- * @desc Obtiene detalles de un libro por ISBN
- * @route GET /isbn/:isbn
- */
-public_users.get('/isbn/:isbn', async (req, res) => {
-    const { isbn } = req.params;
+// Obtener libro por ISBN usando async/await y Axios (simulado)
+public_users.get('/isbn/:isbn', async function (req, res) {
+    const isbn = req.params.isbn;
     try {
+        // Ejemplo de uso de Axios si la API fuera externa
+        // const response = await axios.get(`http://localhost:5000/isbn/${isbn}`);
         const book = books[isbn];
         if (book) {
-            return res.status(200).json(book);
+            res.status(200).json(book);
+        } else {
+            res.status(404).json({ message: "Libro no encontrado" });
         }
-        return res.status(404).json({ message: "Libro no encontrado con ese ISBN" });
     } catch (error) {
-        return res.status(500).json({ message: "Error al procesar la solicitud por ISBN" });
+        res.status(500).json({ message: "Error al recuperar por ISBN" });
     }
 });
 
-/**
- * @desc Obtiene lista de libros por autor
- * @route GET /author/:author
- */
-public_users.get('/author/:author', async (req, res) => {
+// Obtener libros por Autor
+public_users.get('/author/:author', async function (req, res) {
     const author = req.params.author;
     try {
-        const filteredBooks = Object.values(books).filter(b => b.author === author);
-        if (filteredBooks.length > 0) {
-            return res.status(200).json({ booksbyauthor: filteredBooks });
-        }
-        return res.status(404).json({ message: "No se encontraron libros para el autor especificado" });
+        const bookList = Object.values(books).filter(book => book.author === author);
+        res.status(200).json({ booksbyauthor: bookList });
     } catch (error) {
-        return res.status(500).json({ message: "Error al buscar por autor" });
+        res.status(500).json({ message: "Error al buscar por autor" });
     }
 });
 
-/**
- * @desc Obtiene lista de libros por título
- * @route GET /title/:title
- */
-public_users.get('/title/:title', async (req, res) => {
+// Obtener libros por Título
+public_users.get('/title/:title', async function (req, res) {
     const title = req.params.title;
     try {
-        const filteredBooks = Object.values(books).filter(b => b.title === title);
-        if (filteredBooks.length > 0) {
-            return res.status(200).json({ booksbytitle: filteredBooks });
-        }
-        return res.status(404).json({ message: "No se encontraron libros con ese título" });
+        const bookList = Object.values(books).filter(book => book.title === title);
+        res.status(200).json({ booksbytitle: bookList });
     } catch (error) {
-        return res.status(500).json({ message: "Error al buscar por título" });
+        res.status(500).json({ message: "Error al buscar por título" });
     }
 });
 
